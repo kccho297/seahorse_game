@@ -43,13 +43,33 @@
 
     <style>
         body {
-            background-color: #0f172a;
+            background-color: #020617;
             color: #fff;
+            margin: 0;
+            overflow: hidden; /* Prevent body scroll */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* The Game Frame */
+        #game-container {
+            position: relative;
+            width: 1000px;
+            height: 600px;
+            max-width: 95vw;
+            max-height: 90vh; /* Keep some margin on mobile */
+            background-color: #0f172a;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            border: 4px solid #1e293b;
             overflow: hidden;
             touch-action: none;
             user-select: none;
-            margin: 0;
         }
+
         .screen {
             position: absolute;
             top: 0;
@@ -64,162 +84,165 @@
         }
         canvas {
             display: block;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
-    <!-- Game Canvas -->
-    <canvas id="gameCanvas"></canvas>
 
-    <!-- HUD: Playing State -->
-    <div id="hud-playing" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-10 pointer-events-none hidden">
-        <div class="flex flex-col gap-4 w-64">
-            <!-- Player 1 Status -->
-            <div id="p1-hud" class="hidden">
-                <div class="flex justify-between text-white text-sm font-ui font-bold drop-shadow-md mb-1">
-                    <span class="text-yellow-400">P1 (WASD + L)</span>
-                    <span id="p1-energy-text">100%</span>
+    <div id="game-container">
+        <!-- Game Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD: Playing State -->
+        <div id="hud-playing" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-10 pointer-events-none hidden">
+            <div class="flex flex-col gap-4 w-64">
+                <!-- Player 1 Status -->
+                <div id="p1-hud" class="hidden">
+                    <div class="flex justify-between text-white text-sm font-ui font-bold drop-shadow-md mb-1">
+                        <span class="text-yellow-400">P1 (WASD + L)</span>
+                        <span id="p1-energy-text">100%</span>
+                    </div>
+                    <div class="h-3 bg-slate-800/50 rounded-full border border-white/20 overflow-hidden backdrop-blur">
+                        <div id="p1-energy-bar" class="h-full bg-yellow-400 transition-all duration-300" style="width: 100%"></div>
+                    </div>
                 </div>
-                <div class="h-3 bg-slate-800/50 rounded-full border border-white/20 overflow-hidden backdrop-blur">
-                    <div id="p1-energy-bar" class="h-full bg-yellow-400 transition-all duration-300" style="width: 100%"></div>
+                <!-- Player 2 Status -->
+                <div id="p2-hud" class="hidden">
+                    <div class="flex justify-between text-white text-sm font-ui font-bold drop-shadow-md mb-1">
+                        <span class="text-cyan-400">P2 (ARROWS + ENTER)</span>
+                        <span id="p2-energy-text">100%</span>
+                    </div>
+                    <div class="h-3 bg-slate-800/50 rounded-full border border-white/20 overflow-hidden backdrop-blur">
+                        <div id="p2-energy-bar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 100%"></div>
+                    </div>
                 </div>
             </div>
-            <!-- Player 2 Status -->
-            <div id="p2-hud" class="hidden">
-                <div class="flex justify-between text-white text-sm font-ui font-bold drop-shadow-md mb-1">
-                    <span class="text-cyan-400">P2 (ARROWS + ENTER)</span>
-                    <span id="p2-energy-text">100%</span>
-                </div>
-                <div class="h-3 bg-slate-800/50 rounded-full border border-white/20 overflow-hidden backdrop-blur">
-                    <div id="p2-energy-bar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 100%"></div>
+
+            <!-- Score Display -->
+            <div class="text-center">
+                <div id="score-single" class="hidden text-5xl text-white font-bold drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] font-game">0m</div>
+                <div id="score-multi" class="hidden flex gap-8 bg-slate-900/50 p-3 rounded-2xl backdrop-blur-md border border-white/10 font-ui">
+                    <div class="flex flex-col items-center">
+                        <span class="text-yellow-400 text-xs font-bold uppercase">Player 1</span>
+                        <span id="score-p1" class="text-2xl text-white font-bold">0m</span>
+                    </div>
+                    <div class="w-px bg-white/20"></div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-cyan-400 text-xs font-bold uppercase">Player 2</span>
+                        <span id="score-p2" class="text-2xl text-white font-bold">0m</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Score Display -->
-        <div class="text-center">
-            <div id="score-single" class="hidden text-5xl text-white font-bold drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] font-game">0m</div>
-            <div id="score-multi" class="hidden flex gap-8 bg-slate-900/50 p-3 rounded-2xl backdrop-blur-md border border-white/10 font-ui">
-                <div class="flex flex-col items-center">
-                    <span class="text-yellow-400 text-xs font-bold uppercase">Player 1</span>
-                    <span id="score-p1" class="text-2xl text-white font-bold">0m</span>
+        <!-- HUD: Warning -->
+        <div id="hud-warning" class="absolute top-1/4 left-0 w-full flex-col items-center justify-center animate-pulse-fast z-10 pointer-events-none hidden">
+            <div class="bg-red-600 text-white px-8 py-4 rounded-xl border-4 border-red-800 shadow-2xl flex flex-col items-center">
+                <div class="flex items-center gap-4 text-4xl font-bold uppercase tracking-widest font-game">
+                    ⚠ ️ TRAWLER DETECTED ⚠ ️
                 </div>
-                <div class="w-px bg-white/20"></div>
-                <div class="flex flex-col items-center">
-                    <span class="text-cyan-400 text-xs font-bold uppercase">Player 2</span>
-                    <span id="score-p2" class="text-2xl text-white font-bold">0m</span>
-                </div>
+                <div class="text-center text-xl mt-2 font-ui font-bold">SWIM UP!</div>
             </div>
         </div>
-    </div>
 
-    <!-- HUD: Warning -->
-    <div id="hud-warning" class="absolute top-1/4 left-0 w-full flex-col items-center justify-center animate-pulse-fast z-10 pointer-events-none hidden">
-        <div class="bg-red-600 text-white px-8 py-4 rounded-xl border-4 border-red-800 shadow-2xl flex flex-col items-center">
-            <div class="flex items-center gap-4 text-4xl font-bold uppercase tracking-widest font-game">
-                ⚠ ️ TRAWLER DETECTED ⚠ ️
-            </div>
-            <div class="text-center text-xl mt-2 font-ui font-bold">SWIM UP!</div>
-        </div>
-    </div>
-
-    <!-- Screen: Menu -->
-    <div id="screen-menu" class="screen active flex-col items-center justify-center bg-ocean-900/90 backdrop-blur-sm">
-        <div class="text-center mb-10 animate-in fade-in zoom-in duration-500">
-            <div class="flex justify-center mb-6 animate-float">
-                <div class="bg-white/10 p-6 rounded-full shadow-[0_0_50px_rgba(56,189,248,0.3)]">
-                    <svg width="120" height="120" viewBox="-40 -40 80 80" fill="none">
-                        <path d="M-10 1 Q -25 5, -10 15" stroke="#fbbf24" stroke-width="1" fill="#fcd34d" />
-                        <path d="M0 20 C 1 30, 20 50, 15 30 S 2 30, 5 15" stroke="#fbbf24" stroke-width="8" stroke-linecap="round" fill="none" />
-                        <ellipse cx="0" cy="10" rx="12" ry="18" fill="#fbbf24" />
-                        <ellipse cx="3" cy="10" rx="8" ry="12" fill="#fcd34d" />
-                        <circle cx="0" cy="-15" r="14" fill="#fbbf24" />
-                        <rect x="10" y="-19" width="18" height="9" rx="4.5" transform="rotate(12 10 -15)" fill="#fbbf24" />
-                        <circle cx="4" cy="-16" r="6.5" fill="white" />
-                        <circle cx="7" cy="-16" r="3.5" fill="#0f172a" />
-                        <circle cx="0" cy="-8" r="3.5" fill="#f472b6" fill-opacity="0.6" />
-                    </svg>
+        <!-- Screen: Menu -->
+        <div id="screen-menu" class="screen active flex-col items-center justify-center bg-ocean-900/95 backdrop-blur-sm">
+            <div class="text-center mb-6 animate-in fade-in zoom-in duration-500">
+                <div class="flex justify-center mb-4 animate-float">
+                    <div class="bg-white/10 p-6 rounded-full shadow-[0_0_50px_rgba(56,189,248,0.3)]">
+                        <svg width="100" height="100" viewBox="-40 -40 80 80" fill="none">
+                            <path d="M-10 1 Q -25 5, -10 15" stroke="#fbbf24" stroke-width="1" fill="#fcd34d" />
+                            <path d="M0 20 C 1 30, 20 50, 15 30 S 2 30, 5 15" stroke="#fbbf24" stroke-width="8" stroke-linecap="round" fill="none" />
+                            <ellipse cx="0" cy="10" rx="12" ry="18" fill="#fbbf24" />
+                            <ellipse cx="3" cy="10" rx="8" ry="12" fill="#fcd34d" />
+                            <circle cx="0" cy="-15" r="14" fill="#fbbf24" />
+                            <rect x="10" y="-19" width="18" height="9" rx="4.5" transform="rotate(12 10 -15)" fill="#fbbf24" />
+                            <circle cx="4" cy="-16" r="6.5" fill="white" />
+                            <circle cx="7" cy="-16" r="3.5" fill="#0f172a" />
+                            <circle cx="0" cy="-8" r="3.5" fill="#f472b6" fill-opacity="0.6" />
+                        </svg>
+                    </div>
                 </div>
-            </div>
-            <h1 class="text-7xl text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-orange-500 font-bold drop-shadow-lg mb-4 font-game">
-                Seahorse Survival
-            </h1>
-            <p class="text-xl text-blue-200 font-ui tracking-widest uppercase">The Great Escape</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 font-ui">
-            <button onclick="startGame(1)" class="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-yellow-400 text-white w-64 h-48 rounded-3xl flex flex-col items-center justify-center gap-4 transition-all hover:-translate-y-2 shadow-xl cursor-pointer">
-                <div class="bg-slate-900/50 p-4 rounded-full group-hover:scale-110 transition-transform">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-yellow-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <div class="text-center">
-                    <span class="text-2xl font-bold block mb-1">1 Player</span>
-                    <span class="text-xs text-slate-400 uppercase tracking-wider">WASD to Swim</span>
-                </div>
-            </button>
-
-            <button onclick="startGame(2)" class="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-cyan-400 text-white w-64 h-48 rounded-3xl flex flex-col items-center justify-center gap-4 transition-all hover:-translate-y-2 shadow-xl cursor-pointer">
-                <div class="flex gap-2 bg-slate-900/50 p-4 rounded-full group-hover:scale-110 transition-transform">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-yellow-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-cyan-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <div class="text-center">
-                    <span class="text-2xl font-bold block mb-1">2 Players</span>
-                    <span class="text-xs text-slate-400 uppercase tracking-wider">Arrows for P2</span>
-                </div>
-            </button>
-        </div>
-
-        <div class="mt-12 max-w-lg text-center text-slate-400 text-sm font-ui bg-slate-900/50 p-4 rounded-xl border border-slate-700">
-            <p>
-                <span class="text-yellow-400 font-bold">TIP:</span> Use your <span class="text-white font-bold px-1 bg-slate-700 rounded">L</span> or <span class="text-white font-bold px-1 bg-slate-700 rounded">ENTER</span> key to camouflage! Hiding in seagrass restores energy, but hiding in open water drains it.
-            </p>
-        </div>
-    </div>
-
-    <!-- Screen: Game Over -->
-    <div id="screen-gameover" class="screen flex-col items-center justify-center bg-red-900/90 backdrop-blur-md font-ui">
-        <div class="max-w-lg w-full bg-slate-900 border border-red-500/30 p-8 rounded-3xl shadow-2xl text-center">
-            <div class="mb-6 text-red-500 animate-pulse">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
-                    <circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/>
-                    <path d="M8 20v2h8v-2"/><path d="M12.5 17l.5-2"/>
-                    <path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/>
-                </svg>
+                <h1 class="text-6xl text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-orange-500 font-bold drop-shadow-lg mb-2 font-game">
+                    Seahorse Survival
+                </h1>
+                <p class="text-lg text-blue-200 font-ui tracking-widest uppercase">The Great Escape</p>
             </div>
 
-            <h2 class="text-4xl text-white font-bold mb-2 font-game tracking-wide">GAME OVER</h2>
-            <p id="gameover-reason" class="text-red-200 mb-8 uppercase tracking-widest text-sm font-bold">ELIMINATED</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-ui mb-8">
+                <button onclick="startGame(1)" class="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-yellow-400 text-white w-56 h-40 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-2 shadow-xl cursor-pointer">
+                    <div class="bg-slate-900/50 p-3 rounded-full group-hover:scale-110 transition-transform">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-yellow-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-xl font-bold block mb-1">1 Player</span>
+                        <span class="text-xs text-slate-400 uppercase tracking-wider">WASD to Swim</span>
+                    </div>
+                </button>
 
-            <!-- Single Player Score -->
-            <div id="go-single" class="text-7xl font-bold text-yellow-400 mb-8 drop-shadow-lg font-game hidden">0m</div>
-
-            <!-- Multi Player Score -->
-            <div id="go-multi" class="hidden bg-slate-800 p-4 rounded-xl mb-8 border border-white/10">
-                <div id="go-p1-row" class="flex justify-between items-center p-3 rounded-lg mb-2 bg-white/5 border border-transparent">
-                    <span class="font-bold text-slate-400" id="go-p1-label">Player 1</span>
-                    <span class="text-2xl font-bold text-white" id="go-p1-score">0m</span>
-                </div>
-                <div id="go-p2-row" class="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-transparent">
-                    <span class="font-bold text-slate-400" id="go-p2-label">Player 2</span>
-                    <span class="text-2xl font-bold text-white" id="go-p2-score">0m</span>
-                </div>
+                <button onclick="startGame(2)" class="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-cyan-400 text-white w-56 h-40 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-2 shadow-xl cursor-pointer">
+                    <div class="flex gap-2 bg-slate-900/50 p-3 rounded-full group-hover:scale-110 transition-transform">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-yellow-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-cyan-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-xl font-bold block mb-1">2 Players</span>
+                        <span class="text-xs text-slate-400 uppercase tracking-wider">Arrows for P2</span>
+                    </div>
+                </button>
             </div>
 
-            <div class="bg-slate-800 p-6 rounded-xl border-l-4 border-blue-400 mb-8 text-left shadow-lg">
-                <h3 class="text-blue-400 font-bold uppercase text-xs tracking-widest mb-2 flex items-center gap-2">
-                    Did You Know?
-                </h3>
-                <p id="gameover-fact" class="text-slate-200 leading-relaxed text-lg">
-                    Seahorses are cool.
+            <div class="max-w-lg text-center text-slate-400 text-xs font-ui bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                <p>
+                    <span class="text-yellow-400 font-bold">TIP:</span> Use your <span class="text-white font-bold px-1 bg-slate-700 rounded">L</span> or <span class="text-white font-bold px-1 bg-slate-700 rounded">ENTER</span> key to camouflage! Hiding in seagrass restores energy, but hiding in open water drains it.
                 </p>
             </div>
+        </div>
 
-            <button onclick="showMenu()" class="w-full bg-white hover:bg-slate-200 text-slate-900 font-bold text-xl py-4 rounded-xl shadow-lg flex items-center justify-center gap-3 transition-all hover:scale-105 transform font-game cursor-pointer">
-                PLAY AGAIN
-            </button>
+        <!-- Screen: Game Over -->
+        <div id="screen-gameover" class="screen flex-col items-center justify-center bg-red-900/90 backdrop-blur-md font-ui">
+            <div class="max-w-md w-full bg-slate-900 border border-red-500/30 p-8 rounded-3xl shadow-2xl text-center">
+                <div class="mb-4 text-red-500 animate-pulse">
+                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
+                        <circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/>
+                        <path d="M8 20v2h8v-2"/><path d="M12.5 17l.5-2"/>
+                        <path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/>
+                    </svg>
+                </div>
+
+                <h2 class="text-3xl text-white font-bold mb-2 font-game tracking-wide">GAME OVER</h2>
+                <p id="gameover-reason" class="text-red-200 mb-6 uppercase tracking-widest text-xs font-bold">ELIMINATED</p>
+
+                <!-- Single Player Score -->
+                <div id="go-single" class="text-6xl font-bold text-yellow-400 mb-6 drop-shadow-lg font-game hidden">0m</div>
+
+                <!-- Multi Player Score -->
+                <div id="go-multi" class="hidden bg-slate-800 p-4 rounded-xl mb-6 border border-white/10">
+                    <div id="go-p1-row" class="flex justify-between items-center p-3 rounded-lg mb-2 bg-white/5 border border-transparent">
+                        <span class="font-bold text-slate-400" id="go-p1-label">Player 1</span>
+                        <span class="text-2xl font-bold text-white" id="go-p1-score">0m</span>
+                    </div>
+                    <div id="go-p2-row" class="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-transparent">
+                        <span class="font-bold text-slate-400" id="go-p2-label">Player 2</span>
+                        <span class="text-2xl font-bold text-white" id="go-p2-score">0m</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-blue-400 mb-6 text-left shadow-lg">
+                    <h3 class="text-blue-400 font-bold uppercase text-[10px] tracking-widest mb-1 flex items-center gap-2">
+                        Did You Know?
+                    </h3>
+                    <p id="gameover-fact" class="text-slate-200 leading-snug text-sm">
+                        Seahorses are cool.
+                    </p>
+                </div>
+
+                <button onclick="showMenu()" class="w-full bg-white hover:bg-slate-200 text-slate-900 font-bold text-lg py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105 transform font-game cursor-pointer">
+                    PLAY AGAIN
+                </button>
+            </div>
         </div>
     </div>
 
@@ -283,7 +306,7 @@
                 id: 1, color: '#fbbf24', name: "P1",
                 controls: { 
                     up: ['KeyW'], down: ['KeyS'], left: ['KeyA'], right: ['KeyD'], 
-                    anchor: ['KeyL'] // UPDATED to 'L'
+                    anchor: ['KeyL']
                 },
                 yOffset: 0.4
             },
@@ -299,6 +322,7 @@
 
         // --- GLOBAL STATE ---
         const canvas = document.getElementById('gameCanvas');
+        const container = document.getElementById('game-container'); // Ref to container
         const ctx = canvas.getContext('2d');
         let requestID;
         let selectedPlayerCount = 1;
@@ -319,8 +343,9 @@
         window.addEventListener('resize', resizeCanvas);
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            // Resize canvas to match the container, not the window
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
         }
         resizeCanvas();
 
@@ -531,7 +556,7 @@
                     if(spd > 0.5) p.rotation = p.rotation*0.8 + Math.atan2(p.vy, p.vx)*0.5*0.2;
                 }
 
-                // Bounds
+                // Bounds - ensure we are inside canvas dimensions
                 p.x = Math.max(p.radius, Math.min(canvas.width-p.radius, p.x));
                 p.y = Math.max(p.radius, Math.min(canvas.height-p.radius, p.y));
 
@@ -589,7 +614,12 @@
             // Spawning
             const rateMult = Math.sqrt(gameSpeed);
             const spawn = CONFIG.SPAWN_RATES;
-            if(Math.random() < spawn.PLANKTON * (players.length>1?1.5:1)) spawnEntity('plankton', canvas.width+20, Math.random()*(canvas.height-50));
+            
+            // REDUCED PLANKTON SPAWN: Divide probability by gameSpeed to reduce clutter at high speeds
+            if(Math.random() < (spawn.PLANKTON / gameSpeed) * (players.length>1?1.5:1)) {
+                spawnEntity('plankton', canvas.width+20, Math.random()*(canvas.height-50));
+            }
+            
             if(Math.random() < spawn.PLASTIC * rateMult) spawnEntity('plastic', canvas.width+50, Math.random()*canvas.height);
             if(!net.active) {
                 if(Math.random() < spawn.PREDATOR * rateMult) {
