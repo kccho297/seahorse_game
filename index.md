@@ -57,8 +57,8 @@
         /* The Game Frame */
         #game-container {
             position: relative;
-            width: 1000px;
-            height: 600px;
+            width: 1200px;
+            height: 720px;
             max-width: 95vw;
             max-height: 90vh; /* Keep some margin on mobile */
             background-color: #0f172a;
