@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -135,6 +135,11 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Mating Status (2P only) -->
+            <div id="mating-hud" class="hidden absolute top-20 left-1/2 -translate-x-1/2 bg-pink-500/20 px-4 py-1 rounded-full border border-pink-400/50 backdrop-blur">
+                <span class="text-pink-300 text-xs font-bold font-ui uppercase tracking-wider">Love in the air...</span>
+            </div>
         </div>
 
         <!-- HUD: Warning -->
@@ -145,6 +150,14 @@
                 </div>
                 <div class="text-center text-xl mt-2 font-ui font-bold">SWIM UP!</div>
             </div>
+        </div>
+        
+        <!-- HUD: Baby Bonus -->
+        <div id="hud-bonus" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center z-15 pointer-events-none hidden animate-bounce">
+            <div class="text-pink-400 text-5xl font-bold font-game drop-shadow-[0_4px_4px_rgba(0,0,0,1)] stroke-white">
+                BABY BONUS!
+            </div>
+            <div class="text-white text-3xl font-bold font-ui text-center">+500m</div>
         </div>
 
         <!-- Screen: Menu -->
@@ -172,7 +185,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-ui mb-8">
-                <button onclick="startGame(1)" class="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-yellow-400 text-white w-56 h-40 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-2 shadow-xl cursor-pointer">
+                <button onclick="prepareInstructions(1)" class="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-yellow-400 text-white w-56 h-40 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-2 shadow-xl cursor-pointer">
                     <div class="bg-slate-900/50 p-3 rounded-full group-hover:scale-110 transition-transform">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-yellow-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
@@ -182,7 +195,7 @@
                     </div>
                 </button>
 
-                <button onclick="startGame(2)" class="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-cyan-400 text-white w-56 h-40 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-2 shadow-xl cursor-pointer">
+                <button onclick="prepareInstructions(2)" class="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-cyan-400 text-white w-56 h-40 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all hover:-translate-y-2 shadow-xl cursor-pointer">
                     <div class="flex gap-2 bg-slate-900/50 p-3 rounded-full group-hover:scale-110 transition-transform">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-yellow-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 group-hover:text-cyan-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -193,16 +206,70 @@
                     </div>
                 </button>
             </div>
+        </div>
 
-            <div class="max-w-lg text-center text-slate-400 text-xs font-ui bg-slate-900/50 p-3 rounded-xl border border-slate-700">
-                <p>
-                    <span class="text-yellow-400 font-bold">TIP:</span> Use your <span class="text-white font-bold px-1 bg-slate-700 rounded">L</span> or <span class="text-white font-bold px-1 bg-slate-700 rounded">ENTER</span> key to camouflage! Hiding in seagrass restores energy, but hiding in open water drains it.
-                </p>
+        <!-- Screen: Instructions -->
+        <div id="screen-instructions" class="screen flex-col items-center justify-center bg-slate-900/95 backdrop-blur-xl z-30 font-ui hidden">
+            <div class="max-w-3xl w-full p-8 text-center">
+                <h2 class="text-4xl text-yellow-400 font-game mb-6 tracking-wide drop-shadow-md">HOW TO SURVIVE</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 text-left">
+                    <!-- Controls Section -->
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xl font-bold text-blue-300 mb-4 flex items-center gap-2">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            CONTROLS
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-yellow-400 font-bold text-sm mb-1">PLAYER 1</div>
+                                <div class="text-slate-300 text-sm">
+                                    <span class="bg-slate-700 px-2 py-1 rounded text-white font-mono">W A S D</span> to Swim
+                                </div>
+                                <div class="text-slate-300 text-sm mt-1">
+                                    <span class="bg-slate-700 px-2 py-1 rounded text-white font-mono">L</span> to Camouflage
+                                </div>
+                            </div>
+                            <div id="inst-p2" class="hidden border-t border-white/10 pt-3">
+                                <div class="text-cyan-400 font-bold text-sm mb-1">PLAYER 2</div>
+                                <div class="text-slate-300 text-sm">
+                                    <span class="bg-slate-700 px-2 py-1 rounded text-white font-mono">ARROWS</span> to Swim
+                                </div>
+                                <div class="text-slate-300 text-sm mt-1">
+                                    <span class="bg-slate-700 px-2 py-1 rounded text-white font-mono">ENTER</span> to Camouflage
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mechanics Section -->
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 text-sm text-slate-300 space-y-3">
+                        <h3 class="text-xl font-bold text-pink-300 mb-4 flex items-center gap-2">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            SURVIVAL GUIDE
+                        </h3>
+                        <p><strong class="text-pink-400">Eat Plankton (Pink Dots)</strong> to keep energy up. Running out of energy means death!</p>
+                        <p><strong class="text-green-400">Camouflage (Hold Key)</strong> prevents Predators from seeing you, but drains energy fast unless you hide in <strong class="text-green-600">Seagrass</strong>.</p>
+                        <p><strong class="text-red-400">Avoid Plastic & Predators</strong>. They hurt.</p>
+                        <p><strong class="text-orange-400">TRAWLER NET:</strong> When the alarm sounds, swim UP or get caught!</p>
+                        <div id="inst-mating" class="hidden bg-pink-500/10 p-2 rounded border border-pink-500/20 mt-2">
+                            <strong class="text-pink-300">♥ CO-OP BONUS ♥</strong><br/>
+                            Bump into each other to build love. Player 1 will carry the babies! Delivering them grants <span class="text-white font-bold">+500m</span>!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 justify-center">
+                    <button onclick="showMenu()" class="text-slate-400 hover:text-white font-bold text-sm uppercase tracking-wider py-4">Back</button>
+                    <button onclick="launchGame()" class="w-64 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-slate-900 font-bold text-2xl py-4 rounded-xl shadow-lg hover:scale-105 transition-transform font-game cursor-pointer">
+                        START GAME
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Screen: Game Over -->
-        <div id="screen-gameover" class="screen flex-col items-center justify-center bg-red-900/90 backdrop-blur-md font-ui">
+        <div id="screen-gameover" class="screen flex-col items-center justify-center bg-red-900/90 backdrop-blur-md font-ui hidden">
             <div class="max-w-md w-full bg-slate-900 border border-red-500/30 p-8 rounded-3xl shadow-2xl text-center">
                 <div class="mb-4 text-red-500 animate-pulse">
                     <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto">
@@ -269,13 +336,16 @@
             TRAWL_WARNING_DURATION: 180,
             TRAWL_SPEED_BASE: 5,
             TRAWL_HEIGHT_RATIO: 0.45,
+            PREGNANCY_DURATION: 600, // Frames
+            BABY_COUNT: 8,
+            BABY_SCORE_BONUS: 500
         };
 
         const COLORS = {
             waterTop: '#1e40af', waterBottom: '#0f172a',
             seahorseBelly: '#fcd34d', plankton: '#f472b6',
             plastic: '#94a3b8', net: '#065f46', warning: '#ef4444',
-            blood: '#ef4444', bubble: '#e0f2fe'
+            blood: '#ef4444', bubble: '#e0f2fe', heart: '#ec4899'
         };
 
         const FACTS = {
@@ -352,18 +422,50 @@
         // --- UI NAVIGATION ---
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            if(id) document.getElementById(id).classList.remove('hidden');
             if(id) document.getElementById(id).classList.add('active');
+            
+            // Explicitly hide others to ensure clean switching
+            if(id !== 'screen-menu') document.getElementById('screen-menu').classList.remove('active');
+            if(id !== 'screen-instructions') document.getElementById('screen-instructions').classList.remove('active');
+            if(id !== 'screen-gameover') document.getElementById('screen-gameover').classList.remove('active');
+
+            // Toggle specific hidden classes if needed
+            if(id === 'screen-instructions') document.getElementById('screen-instructions').classList.remove('hidden');
+            else document.getElementById('screen-instructions').classList.add('hidden');
+            
+            if(id === 'screen-menu') document.getElementById('screen-menu').classList.remove('hidden');
         }
 
         function showMenu() {
             showScreen('screen-menu');
             document.getElementById('hud-playing').classList.add('hidden');
             document.getElementById('hud-warning').classList.add('hidden');
+            document.getElementById('hud-bonus').classList.add('hidden');
         }
 
-        function startGame(count) {
+        function prepareInstructions(count) {
             selectedPlayerCount = count;
-            showScreen(null); // Hide menu
+            
+            // Toggle Instructions Content based on player count
+            const p2Controls = document.getElementById('inst-p2');
+            const matingInfo = document.getElementById('inst-mating');
+            
+            if(count === 2) {
+                p2Controls.classList.remove('hidden');
+                matingInfo.classList.remove('hidden');
+            } else {
+                p2Controls.classList.add('hidden');
+                matingInfo.classList.add('hidden');
+            }
+
+            showScreen('screen-instructions');
+        }
+
+        function launchGame() {
+            showScreen(null); // Hide all screens
+            document.getElementById('screen-instructions').classList.add('hidden');
+            document.getElementById('screen-menu').classList.add('hidden');
             
             // Reset Game State
             players = [];
@@ -376,7 +478,7 @@
             keys.clear();
 
             // Setup Players
-            for(let i=0; i<count; i++) {
+            for(let i=0; i<selectedPlayerCount; i++) {
                 const conf = PLAYERS_INIT[i];
                 players.push({
                     config: conf,
@@ -389,6 +491,9 @@
                     distance: 0,
                     isAnchored: false,
                     isCamouflaged: false,
+                    isPregnant: false,
+                    love: 0,
+                    pregnancyTimer: 0,
                     rotation: 0,
                     opacity: 1,
                     isDead: false
@@ -398,9 +503,9 @@
             // Setup HUD visibility
             document.getElementById('hud-playing').classList.remove('hidden');
             document.getElementById('p1-hud').classList.remove('hidden');
-            document.getElementById('p2-hud').classList.toggle('hidden', count < 2);
-            document.getElementById('score-single').classList.toggle('hidden', count > 1);
-            document.getElementById('score-multi').classList.toggle('hidden', count < 2);
+            document.getElementById('p2-hud').classList.toggle('hidden', selectedPlayerCount < 2);
+            document.getElementById('score-single').classList.toggle('hidden', selectedPlayerCount > 1);
+            document.getElementById('score-multi').classList.toggle('hidden', selectedPlayerCount < 2);
 
             // Start Loop
             if (requestID) cancelAnimationFrame(requestID);
@@ -461,9 +566,45 @@
                     life: 40 + Math.random() * 20,
                     maxLife: 60,
                     color,
-                    size: Math.random() * 4 + 2
+                    size: Math.random() * 4 + 2,
+                    type: 'particle'
                 });
             }
+        }
+
+        function spawnHeart(x, y) {
+             particles.push({
+                x, y,
+                vx: (Math.random()-0.5), vy: -Math.random()*2 - 1,
+                life: 60, maxLife: 60,
+                color: COLORS.heart,
+                size: 8,
+                type: 'heart'
+            });
+        }
+
+        function spawnBabies(x, y) {
+            // Visual Effect
+            spawnExplosion(x, y, COLORS.seahorseBelly, 30);
+            
+            // Spawn baby particles that swim away
+            for(let i=0; i<CONFIG.BABY_COUNT; i++) {
+                particles.push({
+                    x: x + (Math.random()-0.5)*20,
+                    y: y + (Math.random()-0.5)*20,
+                    vx: 3 + Math.random()*2,
+                    vy: (Math.random()-0.5)*2,
+                    life: 200, maxLife: 200,
+                    color: '#fbbf24',
+                    size: 8,
+                    type: 'baby'
+                });
+            }
+            
+            // Bonus UI
+            const hud = document.getElementById('hud-bonus');
+            hud.classList.remove('hidden');
+            setTimeout(() => hud.classList.add('hidden'), 2000);
         }
 
         function killPlayer(p, reason) {
@@ -488,12 +629,34 @@
             let w=10, h=10, vx=0, vy=0, spawnY=y;
             const speedMult = gameSpeed;
 
+            // Fix spawn heights
+            if (y === undefined || y === null) {
+                spawnY = Math.random() * canvas.height;
+            }
+
             switch(type) {
-                case 'plankton': w=10; h=10; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult; vy=(Math.random()-0.5); break;
-                case 'plastic': w=25; h=25; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult*1.2; vy=(Math.random()-0.5)*0.5; break;
-                case 'predator_tuna': w=60; h=40; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult*2.8; break;
-                case 'predator_crab': w=60; h=40; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult; spawnY=canvas.height-50; break;
-                case 'seagrass': w=20; h=80+Math.random()*80; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult; spawnY=canvas.height; break;
+                case 'plankton': 
+                    w=10; h=10; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult; 
+                    vy=(Math.random()-0.5); 
+                    spawnY = Math.random()*(canvas.height-50); 
+                    break;
+                case 'plastic': 
+                    w=25; h=25; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult*1.2; 
+                    vy=(Math.random()-0.5)*0.5; 
+                    spawnY = Math.random()*canvas.height; 
+                    break;
+                case 'predator_tuna': 
+                    w=60; h=40; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult*2.8; 
+                    spawnY = Math.random()*(canvas.height-100) + 50; // Random depth
+                    break;
+                case 'predator_crab': 
+                    w=60; h=40; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult; 
+                    spawnY = canvas.height-50; // Floor
+                    break;
+                case 'seagrass': 
+                    w=20; h=80+Math.random()*80; vx = -CONFIG.BASE_SCROLL_SPEED*speedMult; 
+                    spawnY = canvas.height; 
+                    break;
             }
             entities.push({ type, x: x, y: spawnY, width: w, height: h, vx, vy, rotation: 0, id: Math.random() });
         }
@@ -505,7 +668,53 @@
             const scrollSpeed = CONFIG.BASE_SCROLL_SPEED * gameSpeed;
             const distStep = scrollSpeed * 0.05;
 
-            // Player Logic
+            // --- Player Collision (Nudging) & Mating ---
+            let showHeartIcon = false;
+            if (players.length === 2 && !players[0].isDead && !players[1].isDead) {
+                const p1 = players[0];
+                const p2 = players[1];
+                const dx = p1.x - p2.x;
+                const dy = p1.y - p2.y;
+                const dist = Math.hypot(dx, dy);
+                const combinedRadius = p1.radius + p2.radius;
+
+                // Physics Nudge
+                if (dist < combinedRadius) {
+                    const angle = Math.atan2(dy, dx);
+                    const force = 0.5; // Bounce strength
+                    const pushX = Math.cos(angle) * force;
+                    const pushY = Math.sin(angle) * force;
+                    
+                    // Push apart
+                    p1.vx += pushX; p1.vy += pushY;
+                    p2.vx -= pushX; p2.vy -= pushY;
+                    
+                    // Mating Logic
+                    if (!p1.isPregnant && p1.love < 100) {
+                        p1.love += 0.5;
+                        showHeartIcon = true;
+                        if (frameCount % 10 === 0) spawnHeart((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+                    }
+                } else {
+                    if (p1.love > 0) p1.love -= 0.1; // Love decays if not touching
+                }
+
+                // Trigger Pregnancy
+                if (p1.love >= 100 && !p1.isPregnant) {
+                    p1.isPregnant = true;
+                    p1.pregnancyTimer = CONFIG.PREGNANCY_DURATION;
+                    p1.love = 0;
+                    spawnExplosion(p1.x, p1.y, COLORS.heart, 20);
+                }
+            }
+            
+            // Show/Hide Love Hud
+            const loveHud = document.getElementById('mating-hud');
+            if (showHeartIcon) loveHud.classList.remove('hidden');
+            else loveHud.classList.add('hidden');
+
+
+            // --- Player Logic ---
             players.forEach(p => {
                 if(p.isDead) return;
                 p.distance += distStep;
@@ -519,6 +728,16 @@
                 if(ctrl.anchor.some(k => keys.has(k))) action=true;
 
                 if(dx!==0 && dy!==0) { dx*=0.707; dy*=0.707; }
+
+                // Pregnancy Logic
+                if (p.isPregnant) {
+                    p.pregnancyTimer--;
+                    if (p.pregnancyTimer <= 0) {
+                        p.isPregnant = false;
+                        p.distance += CONFIG.BABY_SCORE_BONUS; // Bonus score
+                        spawnBabies(p.x, p.y);
+                    }
+                }
 
                 // Camouflage / Anchor
                 const nearSeagrass = entities.some(e => e.type === 'seagrass' && Math.hypot(p.x-e.x, p.y-(e.y-e.height/2)) < 80);
@@ -605,7 +824,7 @@
                     particles.push({
                         x: net.x+40, y: canvas.height,
                         vx: Math.random()*2, vy: -Math.random()*2,
-                        life: 60, maxLife: 60, color: 'rgba(101,67,33,0.6)', size: 5+Math.random()*5
+                        life: 60, maxLife: 60, color: 'rgba(101,67,33,0.6)', size: 5+Math.random()*5, type: 'particle'
                     });
                 }
                 if(net.x < -600) net.active = false;
@@ -615,16 +834,16 @@
             const rateMult = Math.sqrt(gameSpeed);
             const spawn = CONFIG.SPAWN_RATES;
             
-            // REDUCED PLANKTON SPAWN: Divide probability by gameSpeed to reduce clutter at high speeds
             if(Math.random() < (spawn.PLANKTON / gameSpeed) * (players.length>1?1.5:1)) {
-                spawnEntity('plankton', canvas.width+20, Math.random()*(canvas.height-50));
+                spawnEntity('plankton', canvas.width+20, null);
             }
             
-            if(Math.random() < spawn.PLASTIC * rateMult) spawnEntity('plastic', canvas.width+50, Math.random()*canvas.height);
+            if(Math.random() < spawn.PLASTIC * rateMult) spawnEntity('plastic', canvas.width+50, null);
+            
             if(!net.active) {
                 if(Math.random() < spawn.PREDATOR * rateMult) {
                     const type = Math.random()>0.5 ? 'predator_tuna' : 'predator_crab';
-                    spawnEntity(type, canvas.width+50, 0);
+                    spawnEntity(type, canvas.width+50, null); // Pass null for Y to let function decide
                 }
                 if(Math.random() < spawn.SEAGRASS) spawnEntity('seagrass', canvas.width+50, canvas.height);
             }
@@ -658,7 +877,13 @@
             for(let i=particles.length-1; i>=0; i--) {
                 const p = particles[i];
                 p.x += p.vx; p.y += p.vy;
-                p.vx *= 0.95; p.vy *= 0.95;
+                if (p.type === 'baby') {
+                    // Babies swim smoothly
+                } else if (p.type === 'heart') {
+                    p.vy *= 0.98; // Float up slowly
+                } else {
+                    p.vx *= 0.95; p.vy *= 0.95;
+                }
                 p.life--;
                 if(p.life <= 0) particles.splice(i,1);
             }
@@ -757,7 +982,30 @@
 
             // Particles
             particles.forEach(p => {
-                ctx.globalAlpha = p.life/p.maxLife; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+                ctx.globalAlpha = p.life/p.maxLife; 
+                ctx.fillStyle = p.color; 
+                
+                if (p.type === 'heart') {
+                    // Draw Heart
+                    ctx.save(); ctx.translate(p.x, p.y);
+                    ctx.beginPath();
+                    ctx.moveTo(0,0);
+                    ctx.bezierCurveTo(-5, -5, -10, 0, 0, 10);
+                    ctx.bezierCurveTo(10, 0, 5, -5, 0, 0);
+                    ctx.fill();
+                    ctx.restore();
+                } else if (p.type === 'baby') {
+                    // Draw Baby Seahorse
+                    ctx.save(); ctx.translate(p.x, p.y);
+                    ctx.beginPath(); ctx.moveTo(-2, 0); ctx.quadraticCurveTo(-6, 2, -2, 4);
+                    ctx.fillStyle = p.color; ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(0, 4); ctx.bezierCurveTo(1, 8, 5, 8, 4, 4);
+                    ctx.stroke();
+                    ctx.beginPath(); ctx.arc(0, -3, 3, 0, Math.PI * 2); ctx.fill();
+                    ctx.restore();
+                } else {
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+                }
             });
             ctx.globalAlpha = 1;
 
@@ -787,8 +1035,25 @@
                 ctx.beginPath(); ctx.moveTo(0, 18); ctx.bezierCurveTo(5, 40, 25 + tailSway, 38, 18 + tailSway, 20);
                 ctx.lineWidth = 8; ctx.strokeStyle = p.config.color; ctx.lineCap = 'round'; ctx.stroke();
                 
-                ctx.fillStyle = p.config.color; ctx.beginPath(); ctx.ellipse(0, 10, 12, 18, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = COLORS.seahorseBelly; ctx.beginPath(); ctx.ellipse(4, 10, 7, 12, 0, 0, Math.PI * 2); ctx.fill();
+                // Pregnant Belly!
+                ctx.fillStyle = p.config.color; 
+                ctx.beginPath(); 
+                if (p.isPregnant) {
+                     ctx.ellipse(0, 12, 16, 20, 0, 0, Math.PI * 2); // Bigger belly
+                } else {
+                     ctx.ellipse(0, 10, 12, 18, 0, 0, Math.PI * 2); 
+                }
+                ctx.fill();
+
+                ctx.fillStyle = COLORS.seahorseBelly; 
+                ctx.beginPath(); 
+                if (p.isPregnant) {
+                    ctx.ellipse(4, 12, 10, 14, 0, 0, Math.PI * 2); // Bigger belly spot
+                } else {
+                    ctx.ellipse(4, 10, 7, 12, 0, 0, Math.PI * 2); 
+                }
+                ctx.fill();
+
                 ctx.fillStyle = p.config.color; ctx.beginPath(); ctx.arc(0, -15, 14, 0, Math.PI * 2); ctx.fill();
                 
                 ctx.save(); ctx.translate(12, -13); ctx.rotate(0.2);
