@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -337,7 +337,7 @@
             TRAWL_SPEED_BASE: 5,
             TRAWL_HEIGHT_RATIO: 0.45,
             PREGNANCY_DURATION: 600, // Frames
-            BABY_COUNT: 8,
+            BABY_COUNT: 30, // Much more babies
             BABY_SCORE_BONUS: 500
         };
 
@@ -368,6 +368,12 @@
                 "Seahorses are masters of camouflage, changing color to match their surroundings.",
                 "Seahorses are poor swimmers and are easy snacks for crabs, tuna, and rays in open water.",
                 "Use your Camouflage power to hide from predators!"
+            ],
+            pregnancy: [
+                "Seahorses are the only species where the male gets pregnant and gives birth.",
+                "A male seahorse can give birth to up to 2,000 babies at once!",
+                "Seahorse couples greet each other every morning with a dance that can last for hours.",
+                "Baby seahorses are called 'fry' and are totally independent immediately after birth."
             ]
         };
 
@@ -516,11 +522,20 @@
             cancelAnimationFrame(requestID);
             
             // UI Logic
-            const validReason = FACTS[reason] ? reason : 'starvation';
+            let validReason = FACTS[reason] ? reason : 'starvation';
+            
+            // If the player died while pregnant, force a pregnancy fact to teach them
+            if (players[0] && players[0].isPregnant) {
+                validReason = 'pregnancy';
+            }
+
             const factList = FACTS[validReason];
             const fact = factList[Math.floor(Math.random() * factList.length)];
 
-            document.getElementById('gameover-reason').textContent = reason === 'net' ? 'Captured by Trawler' : reason.replace('_', ' ');
+            let displayText = reason === 'net' ? 'Captured by Trawler' : reason.replace('_', ' ');
+            if (validReason === 'pregnancy') displayText += " (With Babies!)";
+
+            document.getElementById('gameover-reason').textContent = displayText;
             document.getElementById('gameover-fact').textContent = fact;
 
             const p1Dist = Math.floor(players[0]?.distance || 0);
@@ -587,17 +602,22 @@
             // Visual Effect
             spawnExplosion(x, y, COLORS.seahorseBelly, 30);
             
-            // Spawn baby particles that swim away
+            // Spawn baby particles that burst out then swim away
             for(let i=0; i<CONFIG.BABY_COUNT; i++) {
+                const angle = (Math.random() * Math.PI) - (Math.PI/2); // Burst right side
+                const burstSpeed = 2 + Math.random() * 4;
+                
                 particles.push({
-                    x: x + (Math.random()-0.5)*20,
-                    y: y + (Math.random()-0.5)*20,
-                    vx: 3 + Math.random()*2,
-                    vy: (Math.random()-0.5)*2,
-                    life: 200, maxLife: 200,
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * burstSpeed, // Burst outward first
+                    vy: Math.sin(angle) * burstSpeed,
+                    life: 250, 
+                    maxLife: 250,
                     color: '#fbbf24',
-                    size: 8,
-                    type: 'baby'
+                    size: 6,
+                    type: 'baby',
+                    swimDelay: 10 + Math.random() * 20 // Delay before swimming forward
                 });
             }
             
@@ -877,13 +897,26 @@
             for(let i=particles.length-1; i>=0; i--) {
                 const p = particles[i];
                 p.x += p.vx; p.y += p.vy;
+                
                 if (p.type === 'baby') {
-                    // Babies swim smoothly
+                    // Friction for burst physics
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+                    
+                    // Swim forward after delay
+                    p.swimDelay--;
+                    if(p.swimDelay <= 0) {
+                         p.vx += 0.2; // Swim right
+                    }
+                    // Wiggle
+                    p.y += Math.sin(frameCount/10 + p.life)*0.5;
+
                 } else if (p.type === 'heart') {
                     p.vy *= 0.98; // Float up slowly
                 } else {
                     p.vx *= 0.95; p.vy *= 0.95;
                 }
+                
                 p.life--;
                 if(p.life <= 0) particles.splice(i,1);
             }
@@ -995,13 +1028,27 @@
                     ctx.fill();
                     ctx.restore();
                 } else if (p.type === 'baby') {
-                    // Draw Baby Seahorse
-                    ctx.save(); ctx.translate(p.x, p.y);
-                    ctx.beginPath(); ctx.moveTo(-2, 0); ctx.quadraticCurveTo(-6, 2, -2, 4);
-                    ctx.fillStyle = p.color; ctx.fill();
-                    ctx.beginPath(); ctx.moveTo(0, 4); ctx.bezierCurveTo(1, 8, 5, 8, 4, 4);
-                    ctx.stroke();
-                    ctx.beginPath(); ctx.arc(0, -3, 3, 0, Math.PI * 2); ctx.fill();
+                    // Draw Cute Tiny Seahorse (Simplified version of parent)
+                    ctx.save(); 
+                    ctx.translate(p.x, p.y);
+                    // Orient them based on velocity
+                    const angle = Math.atan2(p.vy, p.vx);
+                    ctx.rotate(angle * 0.5); // Slight tilt
+
+                    // Body
+                    ctx.beginPath(); ctx.ellipse(0, 3, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
+                    // Tail
+                    ctx.beginPath(); ctx.moveTo(0, 5); ctx.quadraticCurveTo(2, 10, 5, 8); 
+                    ctx.strokeStyle = p.color; ctx.lineWidth = 2; ctx.stroke();
+                    // Head
+                    ctx.beginPath(); ctx.arc(0, -3, 3.5, 0, Math.PI * 2); ctx.fill();
+                    // Snout
+                    ctx.beginPath(); ctx.moveTo(2, -3); ctx.lineTo(5, -3); 
+                    ctx.strokeStyle = p.color; ctx.lineWidth = 2; ctx.stroke();
+                    // Eye
+                    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(1, -4, 1.5, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(1.5, -4, 0.5, 0, Math.PI*2); ctx.fill();
+
                     ctx.restore();
                 } else {
                     ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
